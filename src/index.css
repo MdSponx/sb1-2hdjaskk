@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-ibm: 'IBM Plex Sans Thai', sans-serif;
+}
+
+body {
+  font-family: var(--font-ibm);
+  background-color: #FFF5EB;
+  color: #1A2B5E;
+  font-weight: 400;
+}
+
+.gradient-hero {
+  background-color: #FFF5EB;
+  position: relative;
+}
+
+.gradient-cta {
+  background: #1A2B5E;
+  position: relative;
+}
+
+@layer components {
+  .nav-link {
+    @apply text-[#1A2B5E] hover:text-[#0C3F2E] transition-colors duration-200 font-medium;
+  }
+  
+  .btn-primary {
+    @apply bg-brand-violet text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-[#0C3F2E] text-sm;
+  }
+  
+  .btn-secondary {
+    @apply border-2 border-[#1A2B5E] text-[#1A2B5E] hover:bg-[#0C3F2E] hover:border-[#0C3F2E] hover:text-white px-4 py-2 rounded-lg font-semibold transition-colors duration-200 text-sm;
+  }
+
+  .heading-1 {
+    @apply text-4xl md:text-5xl font-bold tracking-tight text-[#1A2B5E];
+  }
+
+  .heading-2 {
+    @apply text-3xl font-semibold tracking-normal text-[#1A2B5E];
+  }
+
+  .heading-3 {
+    @apply text-2xl font-medium tracking-normal text-[#1A2B5E];
+  }
+
+  .body-regular {
+    @apply text-base font-normal leading-relaxed text-[#1A2B5E];
+  }
+
+  .body-light {
+    @apply text-base font-light leading-relaxed text-[#1A2B5E]/80;
+  }
+
+  .caption {
+    @apply text-sm font-light leading-normal text-[#1A2B5E]/70;
+  }
+
+  /* Form styles */
+  .form-label {
+    @apply block text-base font-medium text-gray-700 mb-2;
+  }
+
+  .form-label-required {
+    @apply text-red-500 ml-1;
+  }
+
+  .form-label-optional {
+    @apply text-gray-400 text-sm ml-2;
+  }
+
+  .form-description {
+    @apply text-sm text-gray-500 mt-1;
+  }
+
+  .form-input {
+    @apply h-12 text-base block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-brand-violet focus:ring-brand-violet;
+  }
+
+  .form-select {
+    @apply h-12 text-base block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-brand-violet focus:ring-brand-violet;
+  }
+
+  .form-textarea {
+    @apply text-base block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-brand-violet focus:ring-brand-violet;
+  }
+
+  .form-section {
+    @apply bg-white rounded-lg border border-gray-200 p-6;
+  }
+
+  .form-section-title {
+    @apply text-2xl font-semibold text-gray-900 mb-6;
+  }
+
+  .form-section-subtitle {
+    @apply text-xl font-semibold text-gray-900 mb-6;
+  }
+
+  .form-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  }
+
+  .form-legend {
+    @apply text-sm text-gray-500 mt-4;
+  }
+}
+
+/* Rich text content styles */
+.prose {
+  max-width: none;
+}
+
+.prose p {
+  margin: 0.5em 0;
+  line-height: 1.6;
+}
+
+.prose h1 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 1em 0 0.5em;
+  color: #1A2B5E;
+}
+
+.prose h2 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.8em 0 0.4em;
+  color: #1A2B5E;
+}
+
+.prose h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+  color: #1A2B5E;
+}
+
+.prose ul, .prose ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin: 0.25em 0;
+}
+
+.prose ul li {
+  list-style-type: disc;
+}
+
+.prose ol li {
+  list-style-type: decimal;
+}
+
+.prose blockquote {
+  border-left: 3px solid #e2e8f0;
+  padding-left: 1em;
+  margin: 1em 0;
+  color: #64748b;
+  font-style: italic;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-5%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

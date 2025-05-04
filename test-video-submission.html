@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test VideoSubmission Component</title>
+    <script type="module">
+        import { createRoot } from 'react-dom/client';
+        import React from 'react';
+        import { VideoSubmission } from './src/components/admin/VideoSubmission';
+
+        // Mock data for testing
+        const mockVideos = [
+            {
+                id: "video1",
+                videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", // Sample video URL
+                title: "Test Video 1",
+                groupName: "Test Group",
+                school: "Test School",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                rating: 4.5,
+                applicationId: "app1"
+            }
+        ];
+
+        // Mock functions
+        const handleVideoSelect = (video) => {
+            console.log("Selected video:", video);
+        };
+
+        const handleVideosChange = (videos) => {
+            console.log("Videos changed:", videos);
+        };
+
+        // Render the component
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('root');
+            const root = createRoot(container);
+            
+            root.render(
+                React.createElement(VideoSubmission, {
+                    applicationId: "app1",
+                    projectId: "project1",
+                    projectImage: "https://via.placeholder.com/800x400",
+                    videos: mockVideos,
+                    selectedVideo: mockVideos[0],
+                    onVideoSelect: handleVideoSelect,
+                    onVideosChange: handleVideosChange,
+                    projectTitle: "Test Project",
+                    groupName: "Test Group",
+                    school: "Test School"
+                })
+            );
+        });
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>

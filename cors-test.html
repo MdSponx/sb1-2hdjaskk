@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Storage CORS Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #e6f4ea;
+            border: 1px solid #34a853;
+        }
+        .error {
+            background-color: #fce8e6;
+            border: 1px solid #ea4335;
+        }
+        .video-container {
+            margin-top: 20px;
+        }
+        video {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .tab.active {
+            border: 1px solid #ddd;
+            border-bottom-color: white;
+            border-radius: 4px 4px 0 0;
+            margin-bottom: -1px;
+            background-color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firebase Storage CORS Test</h1>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="cors-test">CORS Test</div>
+        <div class="tab" data-tab="video-test">Video Playback Test</div>
+        <div class="tab" data-tab="blob-test">Blob URL Test</div>
+    </div>
+    
+    <div class="container">
+        <div class="tab-content active" id="cors-test">
+            <div class="test-section">
+                <h2>Test CORS Configuration</h2>
+                <p>Enter a Firebase Storage URL to test if CORS is properly configured:</p>
+                
+                <div class="input-group">
+                    <label for="cors-url">Firebase Storage URL:</label>
+                    <input type="text" id="cors-url" placeholder="https://firebasestorage.googleapis.com/...">
+                </div>
+                
+                <button id="test-cors">Test CORS Configuration</button>
+                
+                <div id="cors-result" class="result" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="video-test">
+            <div class="test-section">
+                <h2>Test Video Playback</h2>
+                <p>Enter a Firebase Storage URL to test video playback:</p>
+                
+                <div class="input-group">
+                    <label for="video-url">Firebase Storage URL:</label>
+                    <input type="text" id="video-url" placeholder="https://firebasestorage.googleapis.com/...">
+                </div>
+                
+                <button id="load-video">Load Video</button>
+                
+                <div class="video-container" style="display: none;">
+                    <h3>Standard Video Element:</h3>
+                    <video id="test-video" controls width="100%"></video>
+                    
+                    <h3>Video with crossOrigin="anonymous":</h3>
+                    <video id="test-video-cors" crossorigin="anonymous" controls width="100%"></video>
+                </div>
+                
+                <div id="video-result" class="result" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="blob-test">
+            <div class="test-section">
+                <h2>Test Blob URL Approach</h2>
+                <p>Enter a Firebase Storage URL to test the Blob URL approach (downloads the file first):</p>
+                
+                <div class="input-group">
+                    <label for="blob-url">Firebase Storage URL:</label>
+                    <input type="text" id="blob-url" placeholder="https://firebasestorage.googleapis.com/...">
+                </div>
+                
+                <button id="create-blob">Create Blob URL & Play</button>
+                
+                <div class="video-container" id="blob-video-container" style="display: none;">
+                    <video id="blob-video" controls width="100%"></video>
+                </div>
+                
+                <div id="blob-result" class="result" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // CORS Test
+        document.getElementById('test-cors').addEventListener('click', async () => {
+            const url = document.getElementById('cors-url').value.trim();
+            if (!url) {
+                alert('Please enter a Firebase Storage URL');
+                return;
+            }
+            
+            const resultElement = document.getElementById('cors-result');
+            resultElement.style.display = 'block';
+            resultElement.className = 'result';
+            resultElement.textContent = 'Testing CORS configuration...';
+            
+            try {
+                // Test with HEAD request first
+                const headResponse = await fetch(url, { method: 'HEAD' });
+                
+                let corsIssues = [];
+                let allHeaders = '';
+                
+                headResponse.headers.forEach((value, key) => {
+                    allHeaders += `${key}: ${value}\n`;
+                });
+                
+                if (!headResponse.ok) {
+                    resultElement.className = 'result error';
+                    resultElement.textContent = `Error: HTTP ${headResponse.status} ${headResponse.statusText}\n\nHeaders:\n${allHeaders}`;
+                    return;
+                }
+                
+                if (!headResponse.headers.has('access-control-allow-origin')) {
+                    corsIssues.push('Missing Access-Control-Allow-Origin header');
+                }
+                
+                if (corsIssues.length > 0) {
+                    resultElement.className = 'result error';
+                    resultElement.textContent = `CORS issues detected:\n- ${corsIssues.join('\n- ')}\n\nHeaders:\n${allHeaders}`;
+                } else {
+                    resultElement.className = 'result success';
+                    resultElement.textContent = `CORS is properly configured!\n\nHeaders:\n${allHeaders}`;
+                }
+            } catch (error) {
+                resultElement.className = 'result error';
+                resultElement.textContent = `Error testing CORS: ${error.message}`;
+            }
+        });
+
+        // Video Test
+        document.getElementById('load-video').addEventListener('click', () => {
+            const url = document.getElementById('video-url').value.trim();
+            if (!url) {
+                alert('Please enter a Firebase Storage URL');
+                return;
+            }
+            
+            const videoContainer = document.querySelector('#video-test .video-container');
+            videoContainer.style.display = 'block';
+            
+            const video = document.getElementById('test-video');
+            const videoCors = document.getElementById('test-video-cors');
+            const resultElement = document.getElementById('video-result');
+            
+            video.src = url;
+            videoCors.src = url;
+            
+            resultElement.style.display = 'block';
+            resultElement.className = 'result';
+            resultElement.textContent = 'Loading videos...';
+            
+            // Monitor video events
+            const events = ['loadstart', 'loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough', 'play', 'playing', 'error'];
+            
+            events.forEach(event => {
+                video.addEventListener(event, () => {
+                    const currentText = resultElement.textContent;
+                    resultElement.textContent = `${currentText}\nStandard video: ${event} event fired`;
+                    
+                    if (event === 'playing') {
+                        resultElement.className = 'result success';
+                    }
+                });
+                
+                videoCors.addEventListener(event, () => {
+                    const currentText = resultElement.textContent;
+                    resultElement.textContent = `${currentText}\nCrossOrigin video: ${event} event fired`;
+                });
+            });
+            
+            video.addEventListener('error', () => {
+                const errorCode = video.error ? video.error.code : 'unknown';
+                const errorMessage = video.error ? video.error.message : 'unknown error';
+                resultElement.className = 'result error';
+                resultElement.textContent += `\nStandard video error: code ${errorCode}, ${errorMessage}`;
+            });
+            
+            videoCors.addEventListener('error', () => {
+                const errorCode = videoCors.error ? videoCors.error.code : 'unknown';
+                const errorMessage = videoCors.error ? videoCors.error.message : 'unknown error';
+                resultElement.textContent += `\nCrossOrigin video error: code ${errorCode}, ${errorMessage}`;
+            });
+        });
+
+        // Blob URL Test
+        document.getElementById('create-blob').addEventListener('click', async () => {
+            const url = document.getElementById('blob-url').value.trim();
+            if (!url) {
+                alert('Please enter a Firebase Storage URL');
+                return;
+            }
+            
+            const resultElement = document.getElementById('blob-result');
+            resultElement.style.display = 'block';
+            resultElement.className = 'result';
+            resultElement.textContent = 'Fetching video and creating blob URL...';
+            
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                
+                resultElement.textContent += `\nBlob URL created: ${blobUrl}`;
+                
+                const videoContainer = document.getElementById('blob-video-container');
+                videoContainer.style.display = 'block';
+                
+                const video = document.getElementById('blob-video');
+                video.src = blobUrl;
+                
+                video.addEventListener('playing', () => {
+                    resultElement.className = 'result success';
+                    resultElement.textContent += '\nVideo is playing using blob URL!';
+                });
+                
+                video.addEventListener('error', () => {
+                    const errorCode = video.error ? video.error.code : 'unknown';
+                    const errorMessage = video.error ? video.error.message : 'unknown error';
+                    resultElement.className = 'result error';
+                    resultElement.textContent += `\nError playing blob URL video: code ${errorCode}, ${errorMessage}`;
+                });
+                
+                video.load();
+                video.play().catch(err => {
+                    resultElement.textContent += `\nError auto-playing: ${err.message}`;
+                });
+                
+            } catch (error) {
+                resultElement.className = 'result error';
+                resultElement.textContent = `Error creating blob URL: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isEditor() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'editor';
+    }
+    
+    function isCommentor() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'commentor';
+    }
+    
+    function isApplicationOwner(applicationData) {
+      return isAuthenticated() && request.auth.uid == applicationData.userId;
+    }
+    
+    // Users collection - allow users to read their own data and admins to manage all users
+    match /users/{userId} {
+      // Allow users to read their own document
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Allow admins to read and write all user documents
+      allow read, write: if isAdmin();
+      // Allow creation and updates with proper validation for own profile
+      allow create, update: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Projects collection - allow public read access
+    match /projects/{projectId} {
+      // Allow anyone to read projects
+      allow read: if true;
+      // Only admins and editors can create, update, or delete projects
+      allow write: if isAdmin() || isEditor();
+    }
+    
+    // Allow authenticated users to read all applications for group name prefill
+    match /applications/{applicationId} {
+      // Allow basic read access for group name prefill
+      allow list: if isAuthenticated();
+      
+      // Allow users to read their own applications
+      allow read: if isAuthenticated() && 
+        (isApplicationOwner(resource.data) || isAdmin() || isEditor() || isCommentor());
+      
+      // Allow admins and editors to read all applications
+      allow read: if isAdmin() || isEditor() || isCommentor();
+      
+      // Allow users to create and update their own applications if:
+      // 1. They are authenticated and it's their own application
+      // 2. The status is 'draft' or 'submitted'
+      allow create, update: if isAuthenticated() &&
+        (isApplicationOwner(request.resource.data) || isAdmin() || isEditor()) &&
+        (
+          (isApplicationOwner(request.resource.data) && 
+           (request.resource.data.status == 'draft' || request.resource.data.status == 'submitted')) ||
+          (isAdmin() || isEditor())
+        );
+      
+      // Members subcollection
+      match /members/{memberId} {
+        // Allow read access only to:
+        // 1. The application owner
+        // 2. Admins/editors
+        allow read: if isAuthenticated() && 
+          (isApplicationOwner(get(/databases/$(database)/documents/applications/$(applicationId)).data) || isAdmin() || isEditor() || isCommentor());
+        
+        // Allow write access only to:
+        // 1. The application owner
+        // 2. Admins/editors
+        allow write: if isAuthenticated() && 
+          (isApplicationOwner(get(/databases/$(database)/documents/applications/$(applicationId)).data) || isAdmin() || isEditor());
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        // Allow read access to admins, editors, and commentors
+        allow read: if isAuthenticated() && 
+          (isAdmin() || isEditor() || isCommentor());
+        
+        // Allow write access to admins, editors, and commentors
+        allow write: if isAuthenticated() && 
+          (isAdmin() || isEditor() || isCommentor()) &&
+          request.resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // Short films collection
+    match /shortfilms/{shortFilmId} {
+      // Allow read access to admins, editors, and commentors
+      allow read: if isAuthenticated() && 
+        (isAdmin() || isEditor() || isCommentor());
+      
+      // Allow write access to admins and editors
+      allow write: if isAuthenticated() && 
+        (isAdmin() || isEditor());
+      
+      // Movie comments subcollection
+      match /movieComments/{commentId} {
+        // Allow read access to admins, editors, and commentors
+        allow read: if isAuthenticated() && 
+          (isAdmin() || isEditor() || isCommentor());
+        
+        // Allow write access to admins, editors, and commentors
+        allow write: if isAuthenticated() && 
+          (isAdmin() || isEditor() || isCommentor()) &&
+          request.resource.data.userId == request.auth.uid;
+      }
+    }
+  }
+}
